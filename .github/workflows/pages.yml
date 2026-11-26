@@ -26,14 +26,22 @@ jobs:
       - name: Assemble site from books
         run: |
           mkdir -p _site
-          echo '<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><title>Learning Library</title></head><body><h1>Learning Library</h1><ul>' > _site/index.html
-          for d in books/*/docs; do
-            book=$(basename $(dirname "$d"))
-            mkdir -p "_site/$book"
-            cp "$d"/*.html "_site/$book/"
-            echo "<li><a href=\"$book/001.html\">$book</a></li>" >> _site/index.html
-          done
-          echo '</ul></body></html>' >> _site/index.html
+          {
+            echo '<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><title>Learning Library</title></head><body><h1>Learning Library</h1>'
+            for d in books/*/docs; do
+              book=$(basename $(dirname "$d"))
+              mkdir -p "_site/$book"
+              cp "$d"/*.html "_site/$book/"
+              echo "<h2>$book</h2><ul>"
+              for f in "$d"/*.html; do
+                base=$(basename "$f")
+                title=$(grep -o '<title>[^<]*</title>' "$f" | head -1 | sed 's/<[^>]*>//g')
+                echo "<li><a href=\"$book/$base\">$title</a></li>"
+              done
+              echo '</ul>'
+            done
+            echo '</body></html>'
+          } > _site/index.html
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
